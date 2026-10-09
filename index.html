@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTS DUO LONE WOLF</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Anime.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
+        body { font-family: 'Fira Code', monospace; background-color: #0f172a; color: #e2e8f0; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10 anim-header">
+            <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-2">
+                Cipher Toolkit
+            </h1>
+            <p class="text-slate-400 text-sm">Vigenere, Playfair, Affine, Hill, Enigma & Super Encryption</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Panel: Configurations -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Cipher Selection & Mode -->
+                <div class="glass-panel rounded-xl p-6 anim-card shadow-lg shadow-blue-900/20">
+                    <h2 class="text-xl text-blue-400 font-semibold mb-4 border-b border-blue-500/30 pb-2">Konfigurasi</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Algoritma Cipher</label>
+                            <select id="cipherType" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm focus:border-blue-500 focus:outline-none transition">
+                                <option value="vig_std">a) Vigenere Cipher Standard (26 Alfabet)</option>
+                                <option value="vig_auto">b) Auto-Key Vigenere Cipher (26 Alfabet)</option>
+                                <option value="vig_ext">c) Extended Vigenere Cipher (256 ASCII)</option>
+                                <option value="playfair">d) Playfair Cipher (26 Alfabet)</option>
+                                <option value="affine">e) Affine Cipher (26 Alfabet)</option>
+                                <option value="hill">f) Hill Cipher (26 Alfabet - Matrix 2x2)</option>
+                                <option value="super">g) Super Enkripsi (Ext. Vig + Transposisi)</option>
+                                <option value="enigma">h) Enigma Cipher (Simplified)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="mode" value="encrypt" checked class="text-blue-500 bg-slate-900 border-slate-600">
+                                <span class="text-sm">Enkripsi</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="mode" value="decrypt" class="text-pink-500 bg-slate-900 border-slate-600">
+                                <span class="text-sm">Dekripsi</span>
+                            </label>
+                        </div>
+
+                        <div id="decryptOptions" class="hidden bg-slate-800/50 p-3 rounded border border-slate-700">
+                            <label class="block text-xs text-slate-400 mb-2">Format Input Dekripsi (Untuk Text)</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="decFormat" value="raw" checked class="text-blue-500 bg-slate-900 border-slate-600">
+                                    <span class="text-xs">Raw Text</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="decFormat" value="base64" class="text-blue-500 bg-slate-900 border-slate-600">
+                                    <span class="text-xs">Base64</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Input Area -->
+                <div class="glass-panel rounded-xl p-6 anim-card shadow-lg shadow-blue-900/20" id="keyPanel">
+                    <h2 class="text-xl text-blue-400 font-semibold mb-4 border-b border-blue-500/30 pb-2">Kunci (Key)</h2>
+                    
+                    <!-- Standard Key -->
+                    <div id="keyBox_standard" class="space-y-2">
+                        <label class="block text-xs text-slate-400">Kata Kunci Utama</label>
+                        <input type="text" id="mainKey" placeholder="Masukkan Kunci..." class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm focus:border-blue-500 focus:outline-none transition" value="SECRET">
+                    </div>
+
+                    <!-- Affine Keys -->
+                    <div id="keyBox_affine" class="hidden space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400">Nilai 'a' (Relatif Prima dgn 26)</label>
+                                <input type="number" id="affineA" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm" value="5">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400">Nilai 'b' (Shift)</label>
+                                <input type="number" id="affineB" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm" value="8">
+                            </div>
+                        </div>
+                        <p class="text-xs text-red-400 hidden" id="affineWarn">Peringatan: 'a' harus relatif prima dengan 26!</p>
+                    </div>
+
+                    <!-- Hill Keys -->
+                    <div id="keyBox_hill" class="hidden space-y-2">
+                        <label class="block text-xs text-slate-400">Kunci Matriks 2x2 (Butuh 4 Huruf)</label>
+                        <input type="text" id="hillKey" maxlength="4" placeholder="CTIG" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm uppercase" value="HATI">
+                    </div>
+                    
+                    <!-- Enigma Keys -->
+                    <div id="keyBox_enigma" class="hidden space-y-2">
+                        <label class="block text-xs text-slate-400">Posisi Awal Rotor (3 Huruf)</label>
+                        <input type="text" id="enigmaKey" maxlength="3" placeholder="AAA" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm uppercase" value="CAT">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: I/O -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Input Panel -->
+                <div class="glass-panel rounded-xl p-6 anim-card shadow-lg shadow-cyan-900/20">
+                    <div class="flex justify-between items-center mb-4 border-b border-cyan-500/30 pb-2">
+                        <h2 class="text-xl text-cyan-400 font-semibold">Pesan (Input)</h2>
+                        <select id="inputType" class="bg-slate-900 border border-slate-600 rounded p-1 text-xs text-slate-300 focus:outline-none">
+                            <option value="text">Ketik Manual (Keyboard)</option>
+                            <option value="file">Unggah File (Sembarang)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="inputBox_text">
+                        <textarea id="inputText" rows="4" class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-sm focus:border-cyan-500 focus:outline-none transition resize-none placeholder-slate-500" placeholder="Ketik pesan di sini..."></textarea>
+                    </div>
+                    
+                    <div id="inputBox_file" class="hidden relative border-2 border-dashed border-slate-600 rounded p-8 text-center hover:border-cyan-500 transition cursor-pointer">
+                        <input type="file" id="inputFile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <svg class="mx-auto h-12 w-12 text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <p class="text-sm text-slate-300" id="fileStatus">Pilih file sembarang (Gambar, Doc, txt, dll)</p>
+                    </div>
+
+                    <button id="btnProcess" class="mt-4 w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-3 px-4 rounded shadow-lg transform transition hover:scale-[1.02] active:scale-95">
+                        JALANKAN PROSES
+                    </button>
+                </div>
+
+                <!-- Output Panel -->
+                <div class="glass-panel rounded-xl p-6 anim-card shadow-lg shadow-purple-900/20 relative" id="outputPanel">
+                    <!-- Overlay Loading -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex-col items-center justify-center rounded-xl z-10">
+                        <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="mt-3 text-purple-400 font-semibold animate-pulse">Memproses Data...</p>
+                    </div>
+
+                    <h2 class="text-xl text-purple-400 font-semibold mb-4 border-b border-purple-500/30 pb-2">Hasil (Output)</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Raw Text / Hex View</label>
+                            <textarea id="outRaw" rows="3" readonly class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-sm text-green-400 resize-none font-mono"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Base64 Encode</label>
+                            <textarea id="outBase64" rows="3" readonly class="w-full bg-slate-900 border border-slate-600 rounded p-3 text-sm text-yellow-400 resize-none font-mono"></textarea>
+                        </div>
+                        
+                        <div class="pt-2">
+                            <button id="btnDownload" disabled class="w-full bg-slate-700 text-slate-400 font-bold py-3 px-4 rounded transition cursor-not-allowed">
+                                SIMPAN FILE HASIL (.dat / restore)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Logic Scripts -->
+    <script>
+        // ==========================================
+        // 1. UTILITIES & CRYPTO HELPER
+        // ==========================================
+        const utils = {
+            mod: (n, m) => ((n % m) + m) % m,
+            isAlpha: (c) => /^[A-Za-z]$/.test(c),
+            clean26: (str) => str.replace(/[^A-Za-z]/g, '').toUpperCase(),
+            textToBytes: (txt) => new TextEncoder().encode(txt),
+            bytesToText: (buf) => new TextDecoder().decode(buf),
+            bytesToBase64: (bytes) => {
+                let bin = "";
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    bin += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(bin);
+            },
+            base64ToBytes: (b64) => {
+                let bin = window.atob(b64);
+                let bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) {
+                    bytes[i] = bin.charCodeAt(i);
+                }
+                return bytes;
+            },
+            gcd: (a, b) => { while (b) { let t = b; b = a % b; a = t; } return a; },
+            modInverse: (a, m) => {
+                a = utils.mod(a, m);
+                for(let x = 1; x < m; x++) {
+                    if (utils.mod(a * x, m) === 1) return x;
+                }
+                return 1;
+            }
+        };
+
+        // ==========================================
+        // 2. CIPHER IMPLEMENTATIONS
+        // ==========================================
+        const ciphers = {
+            // A) Vigenere Standard
+            vig_std: (bytes, key, isDec) => {
+                let pt = utils.clean26(utils.bytesToText(bytes));
+                let k = utils.clean26(key);
+                if(k.length === 0) k = "A";
+                let out = "";
+                for(let i=0, j=0; i<pt.length; i++) {
+                    let pChar = pt.charCodeAt(i) - 65;
+                    let kChar = k.charCodeAt(j % k.length) - 65;
+                    let cChar = isDec ? utils.mod(pChar - kChar, 26) : utils.mod(pChar + kChar, 26);
+                    out += String.fromCharCode(cChar + 65);
+                    j++;
+                }
+                return utils.textToBytes(out);
+            },
+
+            // B) Auto-Key Vigenere (Fix applied based on mathematical logic)
+            vig_auto: (bytes, key, isDec) => {
+                let text = utils.clean26(utils.bytesToText(bytes));
+                let cleanKey = utils.clean26(key);
+                if (cleanKey.length === 0) cleanKey = "A";
+                
+                let outStr = "";
+                let keyStream = cleanKey;
+                if (!isDec) keyStream += text; // Enkripsi: Append plaintext to key
+
+                for (let i = 0; i < text.length; i++) {
+                    let pChar = text.charCodeAt(i) - 65;
+                    let kChar = keyStream.charCodeAt(i) - 65;
+                    
+                    let cChar;
+                    if (isDec) {
+                        cChar = utils.mod(pChar - kChar, 26);
+                        // Dekripsi: Hasil plaintext ditambahkan ke buffer kunci
+                        keyStream += String.fromCharCode(cChar + 65);
+                    } else {
+                        cChar = utils.mod(pChar + kChar, 26);
+                    }
+                    outStr += String.fromCharCode(cChar + 65);
+                }
+                return utils.textToBytes(outStr);
+            },
+
+            // C) Extended Vigenere (256 ASCII)
+            vig_ext: (bytes, key, isDec) => {
+                let kBytes = utils.textToBytes(key);
+                if(kBytes.length === 0) kBytes = new Uint8Array([0]);
+                let out = new Uint8Array(bytes.length);
+                
+                for(let i=0; i<bytes.length; i++) {
+                    let p = bytes[i];
+                    let k = kBytes[i % kBytes.length];
+                    out[i] = isDec ? utils.mod(p - k, 256) : utils.mod(p + k, 256);
+                }
+                return out;
+            },
+
+            // D) Playfair Cipher
+            playfair: (bytes, key, isDec) => {
+                let text = utils.clean26(utils.bytesToText(bytes)).replace(/J/g, 'I');
+                let k = utils.clean26(key).replace(/J/g, 'I');
+                if(k.length === 0) k = "KEY";
+                
+                let matrix = [];
+                let used = new Set();
+                for(let char of k + "ABCDEFGHIKLMNOPQRSTUVWXYZ") {
+                    if(!used.has(char)) { matrix.push(char); used.add(char); }
+                }
+                
+                let pairs = [];
+                if(!isDec) {
+                    for(let i=0; i<text.length; i++) {
+                        let c1 = text[i];
+                        let c2 = text[i+1];
+                        if(c1 === c2) { pairs.push(c1 + 'X'); } 
+                        else if (c2 === undefined) { pairs.push(c1 + 'X'); } 
+                        else { pairs.push(c1 + c2); i++; }
+                    }
+                } else {
+                    for(let i=0; i<text.length; i+=2) pairs.push(text[i] + (text[i+1]||'X'));
+                }
+
+                let out = "";
+                let getPos = (c) => [Math.floor(matrix.indexOf(c)/5), matrix.indexOf(c)%5];
+                
+                for(let p of pairs) {
+                    let [r1, c1] = getPos(p[0]);
+                    let [r2, c2] = getPos(p[1]);
+                    let dir = isDec ? -1 : 1;
+                    
+                    if(r1 === r2) out += matrix[r1*5 + utils.mod(c1+dir, 5)] + matrix[r2*5 + utils.mod(c2+dir, 5)];
+                    else if(c1 === c2) out += matrix[utils.mod(r1+dir, 5)*5 + c1] + matrix[utils.mod(r2+dir, 5)*5 + c2];
+                    else out += matrix[r1*5 + c2] + matrix[r2*5 + c1];
+                }
+                
+                if(isDec && out.endsWith('X')) out = out.slice(0, -1);
+                return utils.textToBytes(out);
+            },
+
+            // E) Affine Cipher
+            affine: (bytes, key, isDec, uiStates) => {
+                let a = parseInt(uiStates.affineA) || 5;
+                let b = parseInt(uiStates.affineB) || 8;
+                let text = utils.clean26(utils.bytesToText(bytes));
+                
+                if (utils.gcd(a, 26) !== 1) throw new Error("Nilai A harus relatif prima dengan 26.");
+                
+                let aInv = utils.modInverse(a, 26);
+                let out = "";
+                
+                for(let i=0; i<text.length; i++) {
+                    let p = text.charCodeAt(i) - 65;
+                    let cChar = isDec ? utils.mod(aInv * (p - b), 26) : utils.mod((a * p) + b, 26);
+                    out += String.fromCharCode(cChar + 65);
+                }
+                return utils.textToBytes(out);
+            },
+
+            // F) Hill Cipher (Matrix 2x2 custom without relying on external math library to prevent mod inverse float issues)
+            hill: (bytes, key, isDec, uiStates) => {
+                let kStr = utils.clean26(uiStates.hillKey);
+                if(kStr.length < 4) kStr = (kStr + "ABCD").slice(0,4);
+                let text = utils.clean26(utils.bytesToText(bytes));
+                if(text.length % 2 !== 0 && !isDec) text += "X"; // pad
+
+                let k = [
+                    [kStr.charCodeAt(0)-65, kStr.charCodeAt(1)-65],
+                    [kStr.charCodeAt(2)-65, kStr.charCodeAt(3)-65]
+                ];
+                
+                let det = utils.mod(k[0][0]*k[1][1] - k[0][1]*k[1][0], 26);
+                if(utils.gcd(det, 26) !== 1) throw new Error("Matriks Kunci tidak memiliki invers (Determinan tidak relatif prima dgn 26). Coba kunci lain.");
+                
+                let kMatrix = k;
+                if(isDec) {
+                    let detInv = utils.modInverse(det, 26);
+                    kMatrix = [
+                        [utils.mod(k[1][1] * detInv, 26), utils.mod(-k[0][1] * detInv, 26)],
+                        [utils.mod(-k[1][0] * detInv, 26), utils.mod(k[0][0] * detInv, 26)]
+                    ];
+                }
+
+                let out = "";
+                for(let i=0; i<text.length; i+=2) {
+                    let p1 = text.charCodeAt(i) - 65;
+                    let p2 = (text.charCodeAt(i+1) || 88) - 65; // 88 = X
+                    
+                    let c1 = utils.mod(kMatrix[0][0]*p1 + kMatrix[0][1]*p2, 26);
+                    let c2 = utils.mod(kMatrix[1][0]*p1 + kMatrix[1][1]*p2, 26);
+                    
+                    out += String.fromCharCode(c1+65) + String.fromCharCode(c2+65);
+                }
+                return utils.textToBytes(out);
+            },
+
+            // G) Super Enkripsi (Ext Vigenere + Columnar Transposition)
+            super: (bytes, key, isDec) => {
+                let k = utils.clean26(key) || "KEY";
+                
+                // Transposition Helper functions
+                const transposeEncrypt = (buf, keystr) => {
+                    let colCount = keystr.length;
+                    let rowCount = Math.ceil(buf.length / colCount);
+                    let grid = new Uint8Array(rowCount * colCount); // auto zero-filled
+                    grid.set(buf); // pad with 0s inherently
+                    
+                    // order columns alphabetically
+                    let order = Array.from(keystr).map((c, i) => ({c, i})).sort((a,b) => a.c.localeCompare(b.c));
+                    
+                    let out = new Uint8Array(grid.length);
+                    let idx = 0;
+                    for(let o of order) {
+                        let c = o.i;
+                        for(let r=0; r<rowCount; r++) {
+                            out[idx++] = grid[r*colCount + c];
+                        }
+                    }
+                    return out;
+                };
+
+                const transposeDecrypt = (buf, keystr) => {
+                    let colCount = keystr.length;
+                    let rowCount = buf.length / colCount;
+                    let order = Array.from(keystr).map((c, i) => ({c, i})).sort((a,b) => a.c.localeCompare(b.c));
+                    
+                    let grid = new Uint8Array(buf.length);
+                    let idx = 0;
+                    for(let o of order) {
+                        let c = o.i;
+                        for(let r=0; r<rowCount; r++) {
+                            grid[r*colCount + c] = buf[idx++];
+                        }
+                    }
+                    return grid;
+                };
+
+                if(!isDec) {
+                    // Pass 1: Vig Ext
+                    let vigBytes = ciphers.vig_ext(bytes, key, false);
+                    // Pass 2: Transpose
+                    return transposeEncrypt(vigBytes, k);
+                } else {
+                    // Pass 1: Transpose (undo)
+                    let untrans = transposeDecrypt(bytes, k);
+                    // Pass 2: Vig Ext
+                    return ciphers.vig_ext(untrans, key, true);
+                }
+            },
+
+            // H) Enigma (Simplified)
+            enigma: (bytes, key, isDec, uiStates) => {
+                // Since Enigma is reciprocal, Enkripsi dan Dekripsi prosesnya sama.
+                let text = utils.clean26(utils.bytesToText(bytes));
+                let initPos = (utils.clean26(uiStates.enigmaKey) + "AAA").slice(0,3);
+                
+                // Standard Rotors I, II, III and Reflector B
+                const w1 = "EKMFLGDQVZNTOWYHXUSPAIBRCJ"; // R1
+                const w2 = "AJDKSIRUXBLHWTMCQGZNPYFVOE"; // R2
+                const w3 = "BDFHJLCPRTXVZNYEIWGAKMUSQO"; // R3
+                const refB = "YRUHQSLDPXNGOKMIEBFZCWVJAT"; // Reflector
+                
+                let p1 = initPos.charCodeAt(0) - 65;
+                let p2 = initPos.charCodeAt(1) - 65;
+                let p3 = initPos.charCodeAt(2) - 65;
+
+                const passRotor = (charIdx, w, pos, reverse=false) => {
+                    let inChar = utils.mod(charIdx + pos, 26);
+                    let outChar;
+                    if(!reverse) outChar = w.charCodeAt(inChar) - 65;
+                    else outChar = w.indexOf(String.fromCharCode(inChar + 65));
+                    return utils.mod(outChar - pos, 26);
+                };
+
+                let out = "";
+                for(let i=0; i<text.length; i++) {
+                    let c = text.charCodeAt(i) - 65;
+                    // Step rotors
+                    p1 = utils.mod(p1 + 1, 26);
+                    if(p1 === 0) { // notch simplifikasi
+                        p2 = utils.mod(p2 + 1, 26);
+                        if(p2 === 0) p3 = utils.mod(p3 + 1, 26);
+                    }
+
+                    // Forward pass
+                    c = passRotor(c, w1, p1);
+                    c = passRotor(c, w2, p2);
+                    c = passRotor(c, w3, p3);
+                    // Reflector
+                    c = refB.charCodeAt(c) - 65;
+                    // Backward pass
+                    c = passRotor(c, w3, p3, true);
+                    c = passRotor(c, w2, p2, true);
+                    c = passRotor(c, w1, p1, true);
+
+                    out += String.fromCharCode(c + 65);
+                }
+                return utils.textToBytes(out);
+            }
+        };
+
+        // ==========================================
+        // 3. MAIN APP CONTROLLER
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // UI Element References
+            const els = {
+                cipherType: document.getElementById('cipherType'),
+                inputType: document.getElementById('inputType'),
+                modeRadios: document.getElementsByName('mode'),
+                decFormatRadios: document.getElementsByName('decFormat'),
+                decryptOptions: document.getElementById('decryptOptions'),
+                keyBoxes: {
+                    standard: document.getElementById('keyBox_standard'),
+                    affine: document.getElementById('keyBox_affine'),
+                    hill: document.getElementById('keyBox_hill'),
+                    enigma: document.getElementById('keyBox_enigma')
+                },
+                inputBoxText: document.getElementById('inputBox_text'),
+                inputBoxFile: document.getElementById('inputBox_file'),
+                inputFile: document.getElementById('inputFile'),
+                inputText: document.getElementById('inputText'),
+                fileStatus: document.getElementById('fileStatus'),
+                btnProcess: document.getElementById('btnProcess'),
+                btnDownload: document.getElementById('btnDownload'),
+                outRaw: document.getElementById('outRaw'),
+                outBase64: document.getElementById('outBase64'),
+                loadingOverlay: document.getElementById('loadingOverlay')
+            };
+
+            let currentFile = null;
+            let finalResultBuffer = null;
+            let finalFileName = "encrypted.dat";
+
+            // Initial Animations
+            anime({ targets: '.anim-header', opacity: [0, 1], translateY: [-20, 0], duration: 800, easing: 'easeOutExpo' });
+            anime({ targets: '.anim-card', opacity: [0, 1], translateY: [20, 0], delay: anime.stagger(150), duration: 800, easing: 'easeOutExpo' });
+
+            // UI Interactions & Logic Toggles
+            const updateUI = () => {
+                const cType = els.cipherType.value;
+                const iType = els.inputType.value;
+                const isDec = document.querySelector('input[name="mode"]:checked').value === 'encrypt' ? false : true;
+
+                // Toggle Input Type
+                els.inputBoxText.classList.toggle('hidden', iType !== 'text');
+                els.inputBoxFile.classList.toggle('hidden', iType !== 'file');
+                
+                // Toggle Decrypt Option Format (only if decrypting text)
+                els.decryptOptions.classList.toggle('hidden', !(isDec && iType === 'text'));
+
+                // Toggle Keys based on cipher
+                els.keyBoxes.standard.classList.toggle('hidden', ['affine', 'hill', 'enigma'].includes(cType));
+                els.keyBoxes.affine.classList.toggle('hidden', cType !== 'affine');
+                els.keyBoxes.hill.classList.toggle('hidden', cType !== 'hill');
+                els.keyBoxes.enigma.classList.toggle('hidden', cType !== 'enigma');
+                
+                // GCD check for Affine
+                if(cType === 'affine') {
+                    const a = parseInt(document.getElementById('affineA').value) || 5;
+                    document.getElementById('affineWarn').classList.toggle('hidden', utils.gcd(a, 26) === 1);
+                }
+            };
+
+            els.cipherType.addEventListener('change', () => { updateUI(); anime({targets: '#keyPanel', scale:[0.98, 1], duration:300}); });
+            els.inputType.addEventListener('change', updateUI);
+            Array.from(els.modeRadios).forEach(r => r.addEventListener('change', updateUI));
+            document.getElementById('affineA').addEventListener('input', updateUI);
+
+            // File Selection Handle
+            els.inputFile.addEventListener('change', (e) => {
+                if(e.target.files.length > 0) {
+                    currentFile = e.target.files[0];
+                    els.fileStatus.textContent = `File: ${currentFile.name} (${(currentFile.size / 1024).toFixed(2)} KB)`;
+                    els.fileStatus.classList.add('text-cyan-400');
+                }
+            });
+
+            // PROCESS BUTTON CLICK
+            els.btnProcess.addEventListener('click', async () => {
+                const isDec = document.querySelector('input[name="mode"]:checked').value === 'decrypt';
+                const iType = els.inputType.value;
+                const cType = els.cipherType.value;
+                const decFormat = document.querySelector('input[name="decFormat"]:checked').value;
+                const mainKey = document.getElementById('mainKey').value;
+
+                const uiStates = {
+                    affineA: document.getElementById('affineA').value,
+                    affineB: document.getElementById('affineB').value,
+                    hillKey: document.getElementById('hillKey').value,
+                    enigmaKey: document.getElementById('enigmaKey').value
+                };
+
+                let inputBytes = new Uint8Array(0);
+                let origFileName = "result.txt";
+
+                try {
+                    // Show Loader
+                    els.loadingOverlay.style.display = 'flex';
+                    
+                    // 1. GATHER INPUT DATA
+                    if(iType === 'text') {
+                        let txt = els.inputText.value;
+                        if(!txt) throw new Error("Input text kosong!");
+                        if(isDec && decFormat === 'base64') {
+                            inputBytes = utils.base64ToBytes(txt);
+                        } else {
+                            inputBytes = utils.textToBytes(txt);
+                        }
+                    } else {
+                        if(!currentFile) throw new Error("Belum ada file yang dipilih!");
+                        let ab = await currentFile.arrayBuffer();
+                        inputBytes = new Uint8Array(ab);
+                        
+                        if(!isDec) {
+                            // File Encryption: Embed Metadata Header -> "FN:filename.ext|"
+                            let headerStr = `FN:${currentFile.name}|`;
+                            let headerBytes = utils.textToBytes(headerStr);
+                            let combined = new Uint8Array(headerBytes.length + inputBytes.length);
+                            combined.set(headerBytes, 0);
+                            combined.set(inputBytes, headerBytes.length);
+                            inputBytes = combined; // We encrypt everything including header
+                        }
+                    }
+
+                    // 2. PROCESS CIPHER (Give slight timeout so UI can render loader)
+                    await new Promise(r => setTimeout(r, 100)); 
+                    
+                    let outBytes = ciphers[cType](inputBytes, mainKey, isDec, uiStates);
+                    
+                    // 3. POST-PROCESS DATA & METADATA RESTORE (For File Decryption)
+                    if(iType === 'file') {
+                        if(!isDec) {
+                            finalFileName = currentFile.name + ".dat";
+                        } else {
+                            // Parse metadata Header "FN:filename|"
+                            let decTextPreview = utils.bytesToText(outBytes.slice(0, 256));
+                            if(decTextPreview.startsWith("FN:")) {
+                                let pipeIdx = decTextPreview.indexOf('|');
+                                if(pipeIdx > -1) {
+                                    finalFileName = decTextPreview.substring(3, pipeIdx);
+                                    // Strip the header from final result
+                                    let headerByteLen = utils.textToBytes(`FN:${finalFileName}|`).length;
+                                    outBytes = outBytes.slice(headerByteLen);
+                                } else {
+                                    finalFileName = "decrypted_file.unknown";
+                                }
+                            } else {
+                                finalFileName = "decrypted_file.unknown";
+                            }
+                        }
+                    } else {
+                        finalFileName = isDec ? "decrypted.txt" : "encrypted.dat";
+                    }
+
+                    finalResultBuffer = outBytes;
+
+                    // 4. DISPLAY OUTPUT
+                    let isAlphaCipher = ['vig_std', 'vig_auto', 'playfair', 'affine', 'hill', 'enigma'].includes(cType);
+                    let displayBytes = outBytes;
+
+                    if (isAlphaCipher) {
+                        // 1. Ubah teks menjadi huruf kecil (lowercase) dan hilangkan spasi
+                        let lowerText = utils.bytesToText(outBytes).toLowerCase().replace(/\s/g, '');
+                        
+                        // 2. Timpa displayBytes dengan teks lowercase 
+                        // agar Base64 nantinya me-ngencode teks yang sudah kecil ini
+                        displayBytes = utils.textToBytes(lowerText);
+                        
+                        // (Opsional) Timpa juga hasil unduhan agar file .dat isinya lowercase
+                        finalResultBuffer = displayBytes; 
+                        
+                        // Tampilkan di text area raw
+                        els.outRaw.value = lowerText;
+                    } else {
+                        // JANGAN lakukan lowercase pada Ext Vig & Super Enkripsi (File Biner / ASCII 256)
+                        // karena akan merusak byte data yang berakibat gagal dekripsi
+                        let previewStr = utils.bytesToText(outBytes.slice(0, 2000));
+                        els.outRaw.value = previewStr + (outBytes.length > 2000 ? "\n\n... [TRUNCATED FOR DISPLAY VIEW] ..." : "");
+                    }
+
+                    // 3. Base64 Encode
+                    // Jika cipher alfabet, ini otomatis meng-encode dari versi lowercase-nya
+                    let b64 = utils.bytesToBase64(displayBytes);
+                    els.outBase64.value = b64;
+
+                    // Enable Download btn
+                    els.btnDownload.classList.remove('bg-slate-700', 'text-slate-400', 'cursor-not-allowed');
+                    els.btnDownload.classList.add('bg-green-600', 'hover:bg-green-500', 'text-white', 'shadow-lg');
+                    els.btnDownload.removeAttribute('disabled');
+                    els.btnDownload.textContent = `SIMPAN SEBAGAI: ${finalFileName}`;
+
+                    // Animation pulse on output
+                    anime({ targets: '#outputPanel', scale: [1.02, 1], duration: 400, easing: 'easeInOutSine' });
+
+                } catch(err) {
+                    alert("ERROR: " + err.message);
+                    console.error(err);
+                } finally {
+                    els.loadingOverlay.style.display = 'none';
+                }
+            });
+
+            // DOWNLOAD BUTTON LOGIC
+            els.btnDownload.addEventListener('click', () => {
+                if(!finalResultBuffer) return;
+                
+                const blob = new Blob([finalResultBuffer], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = finalFileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            });
+
+        });
+    </script>
+</body>
+</html>
